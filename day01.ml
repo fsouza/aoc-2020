@@ -1,3 +1,5 @@
+open StdLabels
+
 let input =
   [|
     285;
@@ -202,7 +204,7 @@ let input =
     2007;
   |]
 
-let find_pair input target =
+let find_pair ?(left = 0) input target =
   let rec loop left right =
     if left > right then None
     else
@@ -213,11 +215,18 @@ let find_pair input target =
       else if sum > target then loop left (right - 1)
       else loop (left + 1) right
   in
-  loop 0 (Array.length input - 1)
+  loop left (Array.length input - 1)
 
 let part01 () =
   find_pair input 2020
   |> Option.map (fun (x, y) -> x * y)
   |> Option.value ~default:0 |> string_of_int |> print_endline
 
-let () = part01 ()
+let part02 () =
+  input
+  |> Array.iteri ~f:(fun i elm ->
+         match find_pair ~left:(i + 1) input (2020 - elm) with
+         | Some (x, y) -> elm * x * y |> string_of_int |> print_endline
+         | None -> ())
+
+let () = part02 ()

@@ -27,13 +27,23 @@ let read_input () =
 
 let seq_length s = Seq.fold_left (fun acc _ -> acc + 1) 0 s
 
-let is_line_valid { min; max; letter; password } =
-  let length =
+let is_line_valid_policy1 { min; max; letter; password } =
+  let count =
     String.to_seq password |> Seq.filter (Char.equal letter) |> seq_length
   in
-  length >= min && length <= max
+  count >= min && count <= max
 
-let part01 () =
-  read_input () |> List.to_seq |> Seq.filter is_line_valid |> seq_length
+let is_line_valid_policy2 { min = pos1; max = pos2; letter; password } =
+  let check = Char.equal letter in
+  let pos1_is_char = check password.[pos1 - 1] in
+  let pos2_is_char = check password.[pos2 - 1] in
+  pos1_is_char <> pos2_is_char
 
-let () = part01 () |> string_of_int |> print_endline
+let count_valid_passwords predicate () =
+  read_input () |> List.to_seq |> Seq.filter predicate |> seq_length
+
+let part01 = count_valid_passwords is_line_valid_policy1
+
+let part02 = count_valid_passwords is_line_valid_policy2
+
+let () = part02 () |> string_of_int |> print_endline

@@ -2,8 +2,6 @@ open StdLabels
 
 type height = Cm of int | In of int
 
-let is_digit ch = ch >= '0' && ch <= '9'
-
 let parse_height v =
   let input_len = String.length v in
   let digits = String.sub ~pos:0 ~len:(input_len - 2) v |> int_of_string_opt in
@@ -19,6 +17,8 @@ let validate_height = function
   | Some (Cm x) -> x > 149 && x < 194
   | Some (In x) -> x > 58 && x < 77
   | _ -> false
+
+let is_digit ch = ch >= '0' && ch <= '9'
 
 let validate_hair_color c =
   if String.length c <> 7 then false

@@ -24,7 +24,10 @@ let validate_hair_color c =
   if String.length c <> 7 then false
   else
     c.[0] == '#'
-    && c |> String.to_seq |> List.of_seq |> List.tl
+    && c
+       |> String.to_seq
+       |> List.of_seq
+       |> List.tl
        |> List.for_all ~f:(fun ch -> is_digit ch || (ch >= 'a' && ch <= 'f'))
 
 let validate_color color = false
@@ -79,8 +82,12 @@ let validate_pid pid =
   && pid |> String.to_seq |> List.of_seq |> List.for_all ~f:is_digit
 
 let is_valid { byr; iyr; eyr; hgt; hcl; ecl; pid; cid } =
-  validate_byr byr && validate_iyr iyr && validate_eyr eyr
-  && validate_height hgt && validate_hair_color hcl && Option.is_some ecl
+  validate_byr byr
+  && validate_iyr iyr
+  && validate_eyr eyr
+  && validate_height hgt
+  && validate_hair_color hcl
+  && Option.is_some ecl
   && validate_pid pid
 
 let passport_with_field passport field_decl =

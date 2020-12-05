@@ -6,7 +6,9 @@ let read_input () =
       let line = read_line () in
       read_input (line :: acc)
     with End_of_file ->
-      acc |> List.map ~f:int_of_string |> List.sort ~cmp:compare
+      acc
+      |> List.map ~f:int_of_string
+      |> List.sort ~cmp:compare
       |> Array.of_list
   in
   read_input []
@@ -27,7 +29,9 @@ let find_pair ?(left = 0) input target =
 let part01 input =
   find_pair input 2020
   |> Option.map (fun (x, y) -> x * y)
-  |> Option.value ~default:0 |> string_of_int |> print_endline
+  |> Option.value ~default:0
+  |> string_of_int
+  |> print_endline
 
 let part02 input =
   input

@@ -30,6 +30,7 @@ let part02 input =
   [ (1, 1); (5, 1); (7, 1); (1, 2) ]
   |> List.map ~f:(fun (right, down) -> input |> count_trees ~right ~down)
   |> List.fold_left ~init:answer_p1 ~f:(fun acc v -> acc * v)
-  |> string_of_int |> print_endline
+  |> string_of_int
+  |> print_endline
 
 let () = read_input () |> part02

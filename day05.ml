@@ -31,7 +31,18 @@ let get_seat_id repr =
   let col_part = String.sub ~pos:7 ~len:3 repr in
   (parse_row row_part * 8) + parse_col col_part
 
-let part1 () =
-  read_input () |> List.map ~f:get_seat_id |> List.fold_left ~f:max ~init:0
+let get_seats () = read_input () |> List.map ~f:get_seat_id
 
-let () = part1 () |> string_of_int |> print_endline
+let part1 () = get_seats () |> List.fold_left ~f:max ~init:0
+
+let part2 () =
+  let seats = get_seats () |> Array.of_list in
+  let n_seats = Array.length seats in
+  seats |> Array.sort ~cmp:( - );
+  seats
+  |> Array.iteri ~f:(fun i seat ->
+         if i < n_seats - 1 && seats.(i + 1) - seat = 2 then print_int (seat + 1))
+
+let () =
+  part2 ();
+  print_newline ()

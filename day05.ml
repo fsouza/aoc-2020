@@ -9,22 +9,21 @@ let read_input () =
   in
   read_input []
 
-let find ~lower_char ~upper_char lower upper str =
+let pow x y = float_of_int x ** float_of_int y |> int_of_float
+
+let find ~bit_char str =
   let length = String.length str in
-  let rec loop lower upper idx =
-    if idx = length then lower
-    else
-      let h = lower + ((upper - lower) / 2) in
-      match str.[idx] with
-      | c when c = lower_char -> loop lower h (idx + 1)
-      | c when c = upper_char -> loop (h + 1) upper (idx + 1)
-      | _ -> invalid_arg "invalid input"
+  let rec loop acc idx =
+    if idx = length then acc
+    else if str.[idx] = bit_char then
+      loop (acc + pow 2 (length - 1 - idx)) (idx + 1)
+    else loop acc (idx + 1)
   in
-  loop lower upper 0
+  loop 0 0
 
-let parse_row = find ~lower_char:'F' ~upper_char:'B' 0 127
+let parse_row = find ~bit_char:'B'
 
-let parse_col = find ~lower_char:'L' ~upper_char:'R' 0 7
+let parse_col = find ~bit_char:'R'
 
 let get_seat_id repr =
   let row_part = String.sub ~pos:0 ~len:7 repr in

@@ -15,9 +15,9 @@ let find ~bit_char str =
   let length = String.length str in
   let rec loop acc idx =
     if idx = length then acc
-    else if str.[idx] = bit_char then
-      loop (acc + pow 2 (length - 1 - idx)) (idx + 1)
-    else loop acc (idx + 1)
+    else
+      let v = if str.[idx] = bit_char then 1 else 0 in
+      loop ((acc lsl 1) lor v) (idx + 1)
   in
   loop 0 0
 

@@ -27,14 +27,6 @@ let parse_line l =
   | [ bag; contents ] -> parse_items (bag, contents)
   | _ -> invalid_arg "invalid input"
 
-let rec add_bag_to_map m bag = function
-  | [] -> m
-  | (hd, _) :: tl when hd = 0 -> add_bag_to_map m bag tl
-  | (n, inner_bag) :: tl -> (
-      match M.find_opt inner_bag m with
-      | None -> add_bag_to_map (M.add inner_bag [ bag ] m) bag tl
-      | Some v -> add_bag_to_map (M.add inner_bag (bag :: v) m) bag tl)
-
 let read_input () =
   let rec read_input acc =
     try

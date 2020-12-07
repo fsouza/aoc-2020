@@ -2,14 +2,6 @@ open StdLabels
 module M = Map.Make (String)
 module S = Set.Make (String)
 
-let debug_map m =
-  M.to_seq m
-  |> List.of_seq
-  |> List.map ~f:(fun (bag, contained_in) ->
-         (bag, String.concat ~sep:", " contained_in))
-  |> List.iter ~f:(fun (bag, contained) ->
-         Printf.printf "%s: %s\n" bag contained)
-
 let parse_bag =
   let bag = Str.regexp " bags?\\.?" in
   Str.replace_first bag ""
@@ -60,9 +52,8 @@ let read_input () =
   in
   read_input []
 
-let part1 () =
+let () =
   let m = read_input () in
-  debug_map m;
   let rec loop visited = function
     | [] ->
         (* subtract 1 because the initial bag shouldn't be counted *)
@@ -77,6 +68,4 @@ let part1 () =
             in
             loop visited (tl @ filtered_list))
   in
-  loop S.empty [ "shiny gold" ]
-
-let () = part1 () |> string_of_int |> print_endline
+  loop S.empty [ "shiny gold" ] |> string_of_int |> print_endline

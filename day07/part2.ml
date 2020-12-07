@@ -39,9 +39,7 @@ let read_input () =
 
 let () =
   let m = read_input () in
-  let rec pair_value = function
-    | 0, _ -> 0
-    | n, inner_bag -> n * bag_value inner_bag
+  let rec pair_value (n, inner_bag) = n * bag_value inner_bag
   and bag_value bag =
     match M.find_opt bag m with
     | None -> 0

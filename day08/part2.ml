@@ -25,6 +25,11 @@ let read_input () =
   in
   read_input []
 
+(* alternatively, we could have a function that tries to execute once,
+ * returning either the value of acc if it can finish or the set of visited
+ * instructions if it loops,
+ * Then we consume such set and try to excute again with jmps changed to nops
+ * and vice-versa (for each jmp or nop in the set) *)
 let rec brute_force instructions idx =
   let length = Array.length instructions in
   let rec exec visited p acc =

@@ -54,13 +54,13 @@ let find_weakness arr target =
   let length = Array.length arr in
   let rec loop left right =
     if left = length then invalid_arg "cant find it"
-    else if right = length then loop (left + 1) (left + 1)
+    else if right = length then loop (left + 1) (left + 2)
     else
       let sum = arr_sum arr left right in
       if sum = target then
         let largest, smallest = largest_smallest arr left right in
         largest + smallest
-      else if sum > target then loop (left + 1) (left + 1)
+      else if sum > target then loop (left + 1) (left + 2)
       else loop left (right + 1)
   in
   loop 0 1

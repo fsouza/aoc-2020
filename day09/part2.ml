@@ -34,14 +34,7 @@ let find_number arr preamble =
   in
   loop 0
 
-let arr_sum arr left right =
-  let sum = ref 0 in
-  for i = left to right do
-    sum := !sum + arr.(i)
-  done;
-  !sum
-
-let largest_smallest arr left right =
+let largest_smallest_in_range arr left right =
   let largest = ref arr.(left) in
   let smallest = ref arr.(left) in
   for i = left + 1 to right do
@@ -50,20 +43,25 @@ let largest_smallest arr left right =
   done;
   (!largest, !smallest)
 
+let rec get_under_target arr left sum target =
+  if sum <= target then (left, sum)
+  else get_under_target arr (left + 1) (sum - arr.(left)) target
+
 let find_weakness arr target =
   let length = Array.length arr in
-  let rec loop left right =
-    if left = length then invalid_arg "cant find it"
-    else if right = length then loop (left + 1) (left + 2)
+  let rec loop left right sum =
+    if left = length || right = length then invalid_arg "cant find it"
     else
-      let sum = arr_sum arr left right in
+      let sum = sum + arr.(right) in
       if sum = target then
-        let largest, smallest = largest_smallest arr left right in
+        let largest, smallest = largest_smallest_in_range arr left right in
         largest + smallest
-      else if sum > target then loop (left + 1) (left + 2)
-      else loop left (right + 1)
+      else if sum > target then
+        let left, sum = get_under_target arr left sum target in
+        loop left right (sum - arr.(right))
+      else loop left (right + 1) sum
   in
-  loop 0 1
+  loop 0 1 arr.(0)
 
 let () =
   let arr = read_input () in

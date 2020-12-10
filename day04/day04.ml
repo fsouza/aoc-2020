@@ -125,7 +125,9 @@ let read_input () =
       if line = "" then add_passport ()
       else read_input passports (line :: curr_lines)
     with End_of_file -> (
-      match curr_lines with [] -> passports | _ -> add_passport ())
+      match curr_lines with
+      | [] -> passports
+      | _ -> add_passport ())
   in
   read_input [] []
 

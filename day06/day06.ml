@@ -18,7 +18,9 @@ let read_input () =
       let line = read_line () in
       if line = "" then add_group () else read_input groups (line :: curr_lines)
     with End_of_file -> (
-      match curr_lines with [] -> groups | _ -> add_group ())
+      match curr_lines with
+      | [] -> groups
+      | _ -> add_group ())
   in
   read_input [] []
 

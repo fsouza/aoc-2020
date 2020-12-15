@@ -35,4 +35,6 @@ let run until (input : string list) : string =
   let turn, next = process_input 1 input in
   run' turn next
 
+(* the difference between part1 and part2 is the size of the input, for part1
+ * use 2020 as the arg to run *)
 let () = read_input () |> run 30000000 |> print_endline

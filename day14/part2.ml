@@ -35,13 +35,18 @@ let make_floating_masks length floating =
     (* this isn't quite right as it produces the mask from 000 twice, but for
      * this problem, it's not an issue, since it's just gonna write to the
      * memory position twice *)
-    let mask = ref 0 in
+    let mask_0 = ref 0 in
+    let mask_1 = ref 0 in
     Array.iter2
       ~f:(fun pos v ->
-        let v = if v = 0 then 1 else 0 in
-        mask := (!mask lor v) lsl (pos - 1))
+        if v = 0 then (
+          mask_0 := (!mask_0 lor 1) lsl (pos - 1);
+          mask_1 := !mask_1 lsl (pos - 1))
+        else (
+          mask_0 := !mask_0 lsl (pos - 1);
+          mask_1 := (!mask_1 lor 1) lsl (pos - 1)))
       floating vs;
-    lnot !mask
+    (lnot !mask_0, !mask_1)
   in
   let rec make_masks acc stop =
     if stop then acc else make_masks (make_mask_from_vs () :: acc) (incr_vs ())
@@ -70,7 +75,8 @@ let parse_pos pos =
 
 let apply_mask (mask, floating_masks) pos =
   let masked = pos lor mask in
-  floating_masks |> List.map ~f:(fun floating_mask -> masked land floating_mask)
+  floating_masks
+  |> List.map ~f:(fun (mask0, mask1) -> masked land mask0 lor mask1)
 
 let rec execute mem mask = function
   | [] -> ()
@@ -78,10 +84,7 @@ let rec execute mem mask = function
   | (pos, v) :: tl ->
       let pos = parse_pos pos in
       let v = int_of_string v in
-      apply_mask mask pos
-      |> List.iter ~f:(fun pos ->
-             Printf.printf "%d\n" pos;
-             Hashtbl.replace mem pos v);
+      apply_mask mask pos |> List.iter ~f:(fun pos -> Hashtbl.replace mem pos v);
       execute mem mask tl
 
 let print_mem = Hashtbl.iter (Printf.printf "mem[%d] = %d\n")
@@ -90,5 +93,4 @@ let () =
   let n, instructions = read_input () in
   let mem = Hashtbl.create n in
   execute mem (0, []) instructions;
-  print_mem mem;
   Hashtbl.fold (fun _ v acc -> acc + v) mem 0 |> string_of_int |> print_endline

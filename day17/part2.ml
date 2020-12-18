@@ -1,4 +1,5 @@
 open StdLabels
+open MoreLabels
 
 module S = Set.Make (struct
   type t = int * int * int * int
@@ -13,8 +14,6 @@ module S = Set.Make (struct
     else if comp_k <> 0 then comp_k
     else comp_l
 end)
-
-let s_fold ~init ~f s = S.fold f s init
 
 let parse_input rows =
   rows
@@ -41,8 +40,10 @@ let get_adj_indices (i, j, k, l) =
     for j_offset = -1 to 1 do
       for k_offset = -1 to 1 do
         for l_offset = -1 to 1 do
-        if not (i_offset = 0 && j_offset = 0 && k_offset = 0 && l_offset = 0) then
-          adj := (i + i_offset, j + j_offset, k + k_offset, l + l_offset) :: !adj
+          if not (i_offset = 0 && j_offset = 0 && k_offset = 0 && l_offset = 0)
+          then
+            adj :=
+              (i + i_offset, j + j_offset, k + k_offset, l + l_offset) :: !adj
         done
       done
     done
@@ -60,12 +61,11 @@ let handle_active active_set shadow quad =
 
 let handle_inactive active_set shadow quad =
   let n_active_adj = count_active_adjacent shadow quad in
-  if n_active_adj = 3 then S.add quad active_set
-  else S.remove quad active_set
+  if n_active_adj = 3 then S.add quad active_set else S.remove quad active_set
 
 let run_iteration active_set inactive_set =
   S.union active_set inactive_set
-  |> s_fold ~init:S.empty ~f:(fun quad s ->
+  |> S.fold ~init:S.empty ~f:(fun quad s ->
          let fn =
            if S.mem quad active_set then handle_active else handle_inactive
          in
@@ -73,7 +73,7 @@ let run_iteration active_set inactive_set =
 
 let build_inactive_set active_set =
   active_set
-  |> s_fold ~init:S.empty ~f:(fun quad s ->
+  |> S.fold ~init:S.empty ~f:(fun quad s ->
          S.union s (S.diff (get_adj_indices quad |> S.of_list) active_set))
 
 let rec run active_set = function

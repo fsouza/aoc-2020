@@ -1,4 +1,5 @@
 open StdLabels
+open MoreLabels
 
 let parse_instruction line =
   match String.split_on_char ~sep:'=' line with
@@ -43,10 +44,13 @@ let rec execute mem mask = function
       Hashtbl.replace mem pos (apply_mask mask v);
       execute mem mask tl
 
-let print_mem = Hashtbl.iter (Printf.printf "mem[%d] = %d\n")
+let print_mem =
+  Hashtbl.iter ~f:(fun ~key ~data -> Printf.printf "mem[%d] = %d\n" key data)
 
 let () =
   let n, instructions = read_input () in
   let mem = Hashtbl.create n in
   execute mem (0, 0) instructions;
-  Hashtbl.fold (fun _ v acc -> acc + v) mem 0 |> string_of_int |> print_endline
+  Hashtbl.fold ~init:0 ~f:(fun ~key:_ ~data acc -> acc + data) mem
+  |> string_of_int
+  |> print_endline

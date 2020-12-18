@@ -1,4 +1,5 @@
 open StdLabels
+open MoreLabels
 module M = Map.Make (String)
 module S = Set.Make (String)
 
@@ -67,8 +68,8 @@ let is_valid n (rule1, rule2) =
 let is_ticket_valid rules ticket =
   ticket |> List.for_all ~f:(fun n -> rules |> List.exists ~f:(is_valid n))
 
-let string_of_s s =
-  S.fold (fun elt acc -> Printf.sprintf "%s '%s'" acc elt) s ""
+let string_of_s =
+  S.fold ~init:"" ~f:(fun elt acc -> Printf.sprintf "%s '%s'" acc elt)
 
 let classify tickets rule_map =
   let field_names = rule_map |> M.bindings |> List.map ~f:fst in
@@ -78,7 +79,7 @@ let classify tickets rule_map =
        ~f:
          (List.iteri ~f:(fun i n ->
               M.iter
-                (fun field_name rule_pair ->
+                ~f:(fun ~key:field_name ~data:rule_pair ->
                   match S.find_opt field_name fields.(i) with
                   | None -> ()
                   | Some v ->

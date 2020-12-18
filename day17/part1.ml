@@ -1,4 +1,5 @@
 open StdLabels
+open MoreLabels
 
 module S = Set.Make (struct
   type t = int * int * int
@@ -10,8 +11,6 @@ module S = Set.Make (struct
     let comp_k = compare k1 k2 in
     if comp_i <> 0 then comp_i else if comp_j <> 0 then comp_j else comp_k
 end)
-
-let s_fold ~init ~f s = S.fold f s init
 
 let parse_input rows =
   rows
@@ -60,7 +59,7 @@ let handle_inactive active_set shadow (i, j, k) =
 
 let run_iteration active_set inactive_set =
   S.union active_set inactive_set
-  |> s_fold ~init:S.empty ~f:(fun triple s ->
+  |> S.fold ~init:S.empty ~f:(fun triple s ->
          let fn =
            if S.mem triple active_set then handle_active else handle_inactive
          in
@@ -68,7 +67,7 @@ let run_iteration active_set inactive_set =
 
 let build_inactive_set active_set =
   active_set
-  |> s_fold ~init:S.empty ~f:(fun triple s ->
+  |> S.fold ~init:S.empty ~f:(fun triple s ->
          S.union s (S.diff (get_adj_indices triple |> S.of_list) active_set))
 
 let rec run active_set = function

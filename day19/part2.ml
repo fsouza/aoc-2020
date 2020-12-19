@@ -54,40 +54,61 @@ let string_of_rule rule =
 
 let is_valid msg rules rule_key =
   let length = String.length msg in
-  let rec is_valid' idx rule =
-    if idx >= length then (true, idx)
+  let rec is_valid' idx rule is_main =
+    if idx >= length then (not is_main, idx)
     else
       match rule with
       | Char c -> (msg.[idx] = c, idx + 1)
-      | Seq s -> all_valid idx s
+      | Seq s -> all_valid idx is_main s
       | AltSeq (s1, s2) ->
-          let s1_valid, s1_idx = is_valid' idx (Seq s1) in
-          if s1_valid then (s1_valid, s1_idx) else is_valid' idx (Seq s2)
-  and all_valid idx = function
+          let s1_valid, s1_idx = is_valid' idx (Seq s1) false in
+          if s1_valid then (s1_valid, s1_idx) else is_valid' idx (Seq s2) false
+  and all_valid idx is_main = function
     | [] -> (true, idx)
     | hd :: tl ->
-        let is_valid, idx = is_valid' idx (Hashtbl.find rules hd) in
-        if not is_valid then (is_valid, idx) else all_valid idx tl
+        if is_main && idx >= length then (false, idx)
+        else
+          let is_valid, idx = is_valid' idx (Hashtbl.find rules hd) false in
+          if not is_valid then (is_valid, idx) else all_valid idx is_main tl
   in
-  let r, idx = is_valid' 0 (Hashtbl.find rules rule_key) in
+  let rule = Hashtbl.find rules rule_key in
+  let r, idx = is_valid' 0 rule true in
   r && idx = length
 
-let rec print_rule rules = function
-  | Char c -> print_char c
-  | Seq s ->
-      s
-      |> List.map ~f:(fun key -> Hashtbl.find rules key)
-      |> List.iter ~f:(print_rule rules)
-  | AltSeq (s1, s2) ->
-      print_rule rules (Seq s1);
-      print_rule rules (Seq s2)
+(* so fun fact: "a" passes with 8, and "a" passes with 11, but "aa" doesn't
+ * pass with 0 (which is '8 11'). Hopefully, if I fix that, it should pass the
+ * regular input.
+ *
+ * aaaabbaaaabbaaa is here because when I run the sample, I get 13 results
+ * instead of 12, and that's the incorrect one. *)
+let cases =
+  [
+    ("a", "8", true);
+    ("a", "11", true);
+    ("aa", "0", true);
+    ("aaaabbaaaabbaaa", "0", false);
+  ]
 
-(* Notes: when looking at the sample, "aaaabbaaaabbaaa" matches, but it should
- * not. Therefore this implementation isn't correct. Will pick it up later
- * today. *)
+let test_cases rules =
+  cases
+  |> List.iter ~f:(fun (msg, rule_key, expected) ->
+         let obtained = is_valid msg rules rule_key in
+         if obtained <> expected then
+           Printf.printf
+             "incorrect result for msg '%s' on key '%s': expected %b, obtained \
+              %b\n"
+             msg rule_key expected obtained)
 
 let () =
+  let run_tests = ref false in
+  Arg.parse_argv Sys.argv
+    [ ("-test", Arg.Set run_tests, "run tests instead of input messages") ]
+    (Fun.const ()) "";
+  let rule_key = "0" in
   let rules, messages = read_input () in
-  messages
-  |> List.filter ~f:(fun msg -> is_valid msg rules "0")
-  |> List.iter ~f:print_endline
+  if !run_tests then test_cases rules
+  else
+    messages
+    |> List.filter ~f:(fun msg -> is_valid msg rules rule_key)
+    |> List.length
+    |> Printf.printf "%d\n"

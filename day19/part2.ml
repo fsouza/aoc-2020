@@ -52,44 +52,71 @@ let string_of_rule rule =
   | AltSeq (s1, s2) ->
       Printf.sprintf "%s | %s" (s1 |> string_of_seq) (s2 |> string_of_seq)
 
-let is_valid msg rules rule_key =
+let highlighted msg idx =
+  msg
+  |> String.to_seqi
+  |> Seq.map (fun (i, ch) ->
+         let fmt_fn =
+           if i = idx then Printf.sprintf "[%c]" else Printf.sprintf "%c"
+         in
+         fmt_fn ch)
+  |> List.of_seq
+  |> String.concat ~sep:""
+
+let is_valid msg rules_tbl rule_key =
   let length = String.length msg in
-  let rec is_valid' idx rule is_main =
-    if idx >= length then (not is_main, idx)
+  let rec is_valid' idx rule =
+    if idx = length then (true, idx)
     else
       match rule with
-      | Char c -> (msg.[idx] = c, idx + 1)
-      | Seq s -> all_valid idx is_main s
+      | Char c -> if msg.[idx] = c then (true, idx + 1) else (false, -1)
+      | Seq s -> all_valid idx s
       | AltSeq (s1, s2) ->
-          let s1_valid, s1_idx = is_valid' idx (Seq s1) false in
-          if s1_valid then (s1_valid, s1_idx) else is_valid' idx (Seq s2) false
-  and all_valid idx is_main = function
+          let s1_valid, s1_idx = all_valid idx s1 in
+          let s2_valid, s2_idx = all_valid idx s2 in
+          if s1_valid && s2_valid then
+            if s1_idx > s2_idx then (s1_valid, s1_idx) else (s2_valid, s2_idx)
+          else if s1_valid then (s1_valid, s1_idx)
+          else if s2_valid then (s2_valid, s2_idx)
+          else (false, -1)
+  and all_valid idx = function
     | [] -> (true, idx)
     | hd :: tl ->
-        if is_main && idx >= length then (false, idx)
-        else
-          let is_valid, idx = is_valid' idx (Hashtbl.find rules hd) false in
-          if not is_valid then (is_valid, idx) else all_valid idx is_main tl
+        let is_valid, new_idx = is_valid' idx (Hashtbl.find rules_tbl hd) in
+        if not is_valid then (false, -1) else all_valid new_idx tl
   in
-  let rule = Hashtbl.find rules rule_key in
-  let r, idx = is_valid' 0 rule true in
-  r && idx = length
+  let rules =
+    match Hashtbl.find rules_tbl rule_key with
+    | Seq s -> s |> List.map ~f:(Hashtbl.find rules_tbl)
+    | r -> [ r ]
+  in
+  rules
+  |> List.fold_left ~init:(true, 0) ~f:(fun (valid, idx) rule ->
+         if not valid then (valid, idx)
+         else if idx = length then (false, idx)
+         else is_valid' idx rule)
+  |> fun (is_valid, idx) -> is_valid && idx = length
 
-(* so fun fact: "a" passes with 8, and "a" passes with 11, but "aa" doesn't
- * pass with 0 (which is '8 11'). Hopefully, if I fix that, it should pass the
- * regular input.
- *
- * aaaabbaaaabbaaa is here because when I run the sample, I get 13 results
- * instead of 12, and that's the incorrect one. *)
+(* aaaabbaaaabbaaa is here because when I run the sample, I get 13 results
+ * instead of 12, and that's the incorrect one. The hope is that if I can fix
+ * that, I'll fix the code for good. *)
 let cases =
   [
-    ("a", "8", true);
-    ("a", "11", true);
-    ("aa", "0", true);
+    ("aa", "18", true);
+    ("bb", "18", true);
+    ("ba", "18", true);
+    ("ab", "18", true);
+    ("aba", "27", false);
+    ("abb", "27", true);
+    ("aab", "27", true);
+    ("baa", "27", true);
+    ("bab", "27", true);
+    ("bba", "27", true);
+    ("bbb", "27", true);
     ("aaaabbaaaabbaaa", "0", false);
   ]
 
-let test_cases rules =
+let run_test_cases rules =
   cases
   |> List.iter ~f:(fun (msg, rule_key, expected) ->
          let obtained = is_valid msg rules rule_key in
@@ -106,7 +133,11 @@ let () =
     (Fun.const ()) "";
   let rule_key = "0" in
   let rules, messages = read_input () in
-  if !run_tests then test_cases rules
+  Hashtbl.replace ~key:"8" ~data:(AltSeq ([ "42" ], [ "42"; "8" ])) rules;
+  Hashtbl.replace ~key:"11"
+    ~data:(AltSeq ([ "42"; "31" ], [ "42"; "11"; "31" ]))
+    rules;
+  if !run_tests then run_test_cases rules
   else
     messages
     |> List.filter ~f:(fun msg -> is_valid msg rules rule_key)

@@ -25,21 +25,45 @@ let grab_borders rows =
     left |> List.to_seq |> String.of_seq;
   ]
 
-let remove_borders rows =
+type tile = {
+  id : int;
+  body : char array array;
+  top : char array;
+  right : char array;
+  bottom : char array;
+  left : char array;
+}
+
+let make_tile id rows =
   let length = Array.length rows in
-  rows
-  |> Array.sub ~pos:1 ~len:(length - 2)
-  |> Array.map ~f:(fun row ->
-         let row_length = Array.length row in
-         row |> Array.sub ~pos:1 ~len:(row_length - 2))
+  let body =
+    rows
+    |> Array.sub ~pos:1 ~len:(length - 2)
+    |> Array.map ~f:(fun row ->
+           let row_length = Array.length row in
+           row |> Array.sub ~pos:1 ~len:(row_length - 2))
+  in
+  let left, right =
+    rows
+    |> Array.fold_left ~init:([], []) ~f:(fun (left, right) row ->
+           let length = Array.length row in
+           (row.(0) :: left, row.(length - 1) :: right))
+  in
+  {
+    id;
+    body;
+    top = rows.(0);
+    bottom = rows.(length - 1);
+    left = left |> Array.of_list;
+    right = right |> Array.of_list;
+  }
 
 let parse_tile tile =
   match String.split_on_char ~sep:'\n' tile with
   | hd :: tl ->
       let tile_contents = parse_tile_contents tl in
-      ( parse_tile_title hd,
-        grab_borders tile_contents,
-        tile_contents |> remove_borders )
+      let id = parse_tile_title hd in
+      (id, grab_borders tile_contents, make_tile id tile_contents)
   | _ -> failwith "invalid input"
 
 let read_input () =
@@ -100,6 +124,9 @@ let () =
   let pairings = get_pairings tiles in
   let tiles_map = get_tiles_map tiles in
   let corners = get_corner_tiles pairings in
+  let tiles_per_row =
+    tiles_map |> IntMap.cardinal |> float_of_int |> sqrt |> int_of_float
+  in
   (* I have the corners, I have the connections, but I don't have the tiles in
      * the proper position - I don't know if I have to rotate and/or flip the tiles.
      * This is gonna be fun. *)

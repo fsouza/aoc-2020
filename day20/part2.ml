@@ -4,18 +4,7 @@ module M = Map.Make (String)
 module S = Set.Make (Int)
 module IntMap = Map.Make (Int)
 
-module RevMap = Map.Make (struct
-  type t = int * int
-
-  let compare ((t1_1, t2_1) : t) ((t1_2, t2_2) : t) : int =
-    let cmp_1 = Int.compare t1_1 t1_2 in
-    let cmp_2 = Int.compare t2_1 t2_2 in
-    if cmp_1 <> 0 then cmp_1 else cmp_2
-end)
-
 let parse_tile_title title = String.sub ~pos:5 ~len:4 title |> int_of_string
-
-let make_string l = l |> List.to_seq |> String.of_seq
 
 let parse_tile_contents rows =
   rows
@@ -68,19 +57,50 @@ let read_input () =
   in
   read_input []
 
+let get_pairings tiles =
+  tiles
+  |> List.fold_left ~init:M.empty ~f:(fun m (tile_id, borders, _) ->
+         borders
+         |> List.map ~f:(fun row ->
+                let rev =
+                  row
+                  |> String.to_seq
+                  |> List.of_seq
+                  |> List.rev
+                  |> List.to_seq
+                  |> String.of_seq
+                in
+                [ row; rev ])
+         |> List.flatten
+         |> List.fold_left ~init:m ~f:(fun m row ->
+                match M.find_opt row m with
+                | None -> M.add ~key:row ~data:(S.singleton tile_id) m
+                | Some tiles -> M.add ~key:row ~data:(S.add tile_id tiles) m))
+  |> M.fold ~init:[] ~f:(fun ~key:_ ~data acc ->
+         match data |> S.to_seq |> List.of_seq with
+         | [ tile1; tile2 ] -> (tile1, tile2) :: acc
+         | [ _ ] -> acc
+         | _ -> failwith "invalid input")
+  |> List.fold_left ~init:IntMap.empty ~f:(fun m (tile1, tile2) ->
+         match IntMap.find_opt tile1 m with
+         | None -> IntMap.add ~key:tile1 ~data:[ tile2 ] m
+         | Some tiles -> IntMap.add ~key:tile1 ~data:(tile2 :: tiles) m)
+
+let get_tiles_map tiles =
+  tiles
+  |> List.fold_left ~init:IntMap.empty ~f:(fun m (tile_id, _, tile) ->
+         IntMap.add ~key:tile_id ~data:tile m)
+
+let get_corner_tiles pairings =
+  IntMap.fold ~init:[] ~f:(fun ~key ~data acc ->
+      if List.length data = 2 then key :: acc else acc)
+
 let () =
-  read_input ()
-  |> M.filter ~f:(fun _ tiles -> S.cardinal tiles = 2)
-  |> M.map ~f:(fun tile_ids ->
-         match tile_ids |> S.to_seq |> List.of_seq with
-         | [ id1; id2 ] -> (id1, id2)
-         | _ -> assert false)
-  |> M.fold ~init:RevMap.empty ~f:(fun ~key ~data ->
-         RevMap.add ~key:data ~data:key)
-  |> RevMap.fold ~init:[] ~f:(fun ~key:(t1, t2) ~data:_ acc -> t1 :: t2 :: acc)
-  |> List.fold_left ~init:IntMap.empty ~f:(fun m tile_id ->
-         let curr = IntMap.find_opt tile_id m |> Option.value ~default:0 in
-         IntMap.add ~key:tile_id ~data:(curr + 1) m)
-  |> IntMap.filter ~f:(fun _ value -> value = 2)
-  |> IntMap.fold ~init:1 ~f:(fun ~key ~data:_ acc -> acc * key)
-  |> Printf.printf "%d\n"
+  let tiles = read_input () in
+  let pairings = get_pairings tiles in
+  let tiles_map = get_tiles_map tiles in
+  let corners = get_corner_tiles pairings in
+  (* I have the corners, I have the connections, but I don't have the tiles in
+     * the proper position - I don't know if I have to rotate and/or flip the tiles.
+     * This is gonna be fun. *)
+  failwith "TODO: build the actual image"

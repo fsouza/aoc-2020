@@ -33,23 +33,29 @@ let read_input () =
   in
   read_input []
 
-let print_entry entry =
-  Printf.printf "entry:\n ingredients: [%s]\n allergens: [%s]\n\n"
-    (entry.ingredients |> String.concat ~sep:", ")
-    (entry.allergens |> String.concat ~sep:", ")
+let collect_ingredients =
+  List.fold_left ~init:M.empty ~f:(fun m entry ->
+      entry.ingredients
+      |> List.fold_left ~init:m ~f:(fun m ingredient ->
+             let curr_val =
+               M.find_opt ingredient m |> Option.value ~default:0
+             in
+             M.add ~key:ingredient ~data:(curr_val + 1) m))
 
-let print_map =
-  M.iter ~f:(fun ~key ~data ->
-      Printf.printf "%s: [%s]\n" key
-        (data |> S.to_seq |> List.of_seq |> String.concat ~sep:", "))
+let diff all = S.fold ~init:all ~f:M.remove
 
 let () =
-  read_input ()
+  let entries = read_input () in
+  let all_ingredients = collect_ingredients entries in
+  entries
   |> List.fold_left ~init:M.empty ~f:(fun m entry ->
-         let allergens = entry.allergens |> List.to_seq |> S.of_seq in
-         entry.ingredients
-         |> List.fold_left ~init:m ~f:(fun m ingredient ->
-                match M.find_opt ingredient m with
-                | None -> M.add ~key:ingredient ~data:allergens m
-                | Some s -> M.add ~key:ingredient ~data:(S.inter s allergens) m))
-  |> print_map
+         let ingredients = entry.ingredients |> List.to_seq |> S.of_seq in
+         entry.allergens
+         |> List.fold_left ~init:m ~f:(fun m allergen ->
+                match M.find_opt allergen m with
+                | None -> M.add ~key:allergen ~data:ingredients m
+                | Some s -> M.add ~key:allergen ~data:(S.inter s ingredients) m))
+  |> M.fold ~init:S.empty ~f:(fun ~key:_ ~data s -> S.union s data)
+  |> diff all_ingredients
+  |> M.fold ~init:0 ~f:(fun ~key:_ ~data acc -> acc + data)
+  |> Printf.printf "%d\n"

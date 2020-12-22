@@ -29,6 +29,8 @@ let read_input () =
 
 type winner = Left of int list | Right of int list
 
+let take n = List.filteri ~f:(fun i _ -> i < n)
+
 let rec play_game players =
   let rounds = Hashtbl.create 1 in
   let rec play_round (p1, p2) =
@@ -40,7 +42,7 @@ let rec play_game players =
       | p1, [] -> Left p1
       | c1 :: tl1, c2 :: tl2 ->
           if c1 <= List.length tl1 && c2 <= List.length tl2 then
-            match play_game (tl1, tl2) with
+            match play_game (take c1 tl1, take c2 tl2) with
             | Left _ -> play_round (tl1 @ [ c1; c2 ], tl2)
             | Right _ -> play_round (tl1, tl2 @ [ c2; c1 ])
           else if c1 > c2 then play_round (tl1 @ [ c1; c2 ], tl2)

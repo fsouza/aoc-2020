@@ -148,15 +148,6 @@ let read_input () =
   in
   read_input []
 
-let index_of arr value =
-  let length = Array.length arr in
-  let rec index_of' i =
-    if i = length then failwith "not found"
-    else if arr.(i) = value then i
-    else index_of' (i + 1)
-  in
-  index_of' 0
-
 let largest = 1_000_000
 
 let move c =

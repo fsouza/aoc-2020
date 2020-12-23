@@ -1,7 +1,7 @@
 open StdLabels
 open MoreLabels
 
-module Cycle : sig
+module Ring : sig
   type 'a t
 
   val of_list : 'a list -> 'a t
@@ -160,15 +160,15 @@ let index_of arr value =
 let largest = 1_000_000
 
 let move c =
-  let vs = Cycle.remove_n c 3 in
+  let vs = Ring.remove_n c 3 in
   let rec find_destination destination =
     if destination = 0 then find_destination largest
     else if List.mem ~set:vs destination then find_destination (destination - 1)
     else destination
   in
-  let destination = find_destination @@ (Cycle.value c - 1) in
-  Cycle.insert_in_cycle c destination vs;
-  Cycle.advance c
+  let destination = find_destination @@ (Ring.value c - 1) in
+  Ring.insert_in_cycle c destination vs;
+  Ring.advance c
 
 let rec run_iterations n cycle =
   if n = 0 then ()
@@ -179,9 +179,9 @@ let rec run_iterations n cycle =
 let () =
   let seq = int_seq largest in
   let input = read_input () in
-  let cycle = Cycle.of_list input in
-  Cycle.add_seq cycle (seq 10);
+  let cycle = Ring.of_list input in
+  Ring.add_seq cycle (seq 10);
   run_iterations 10_000_000 cycle;
-  Cycle.take_after cycle 1 2
+  Ring.take_after cycle 1 2
   |> List.fold_left ~init:1 ~f:( * )
   |> Printf.printf "%d\n"

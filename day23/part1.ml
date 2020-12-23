@@ -1,7 +1,7 @@
 open StdLabels
 open MoreLabels
 
-module Cycle : sig
+module Ring : sig
   type 'a t
 
   val of_list : 'a list -> 'a t
@@ -118,7 +118,7 @@ let read_input () =
       |> String.to_seq
       |> Seq.map int_of_digit
       |> List.of_seq
-      |> Cycle.of_list
+      |> Ring.of_list
   in
   read_input []
 
@@ -132,15 +132,15 @@ let index_of arr value =
   index_of' 0
 
 let move c =
-  let vs = Cycle.remove_n c 3 in
+  let vs = Ring.remove_n c 3 in
   let rec find_destination destination =
     if destination = 0 then find_destination 9
     else if List.mem ~set:vs destination then find_destination (destination - 1)
     else destination
   in
-  let destination = find_destination @@ (Cycle.value c - 1) in
-  Cycle.insert_in_cycle c (Int.equal destination) vs;
-  Cycle.advance c
+  let destination = find_destination @@ (Ring.value c - 1) in
+  Ring.insert_in_cycle c (Int.equal destination) vs;
+  Ring.advance c
 
 let rec run_iterations n cycle =
   if n = 0 then ()
@@ -151,7 +151,7 @@ let rec run_iterations n cycle =
 let () =
   let cycle = read_input () in
   run_iterations 100 cycle;
-  Cycle.take_after cycle (Int.equal 1) 8
+  Ring.take_after cycle (Int.equal 1) 8
   |> List.map ~f:string_of_int
   |> String.concat ~sep:""
   |> print_endline

@@ -32,7 +32,6 @@ let () =
   read_input ()
   |> (fun (first, second) ->
        let first_loop_size = find_loop_size first 1 subject_number 0 in
-       let second_loop_size = find_loop_size second 1 subject_number 0 in
-       ((first, first_loop_size), (second, second_loop_size)))
-  |> fun ((_, first_loop_size), (second_public_key, _)) ->
-  run_loop 1 second_public_key first_loop_size |> Printf.printf "%d\n"
+       (second, first_loop_size))
+  |> fun (public_key, loop_size) ->
+  run_loop 1 public_key loop_size |> Printf.printf "%d\n"

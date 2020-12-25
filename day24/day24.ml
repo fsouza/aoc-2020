@@ -75,7 +75,7 @@ let get_white_tiles black_tiles =
          let all_adjacent = coords |> get_adjacent |> S.of_list in
          S.union white_tiles (S.diff all_adjacent black_tiles))
 
-let run_interation black_tiles white_tiles =
+let run_iteration black_tiles white_tiles =
   S.union black_tiles white_tiles
   |> S.fold ~init:S.empty ~f:(fun coords s ->
          let black_adjacents = count_black_adjacents black_tiles coords in
@@ -92,7 +92,7 @@ let rec flip_n_times n black_tiles =
   if n = 0 then black_tiles
   else
     flip_n_times (n - 1)
-      (run_interation black_tiles (get_white_tiles black_tiles))
+      (run_iteration black_tiles (get_white_tiles black_tiles))
 
 let part1 = Fun.id
 
